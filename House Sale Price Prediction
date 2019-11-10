@@ -1,0 +1,48 @@
+#匯入參數
+import pandas as pd
+import numpy as np
+from keras.models import Sequential
+from keras import optimizers
+from keras.layers import *
+from keras.callbacks import *
+from sklearn.preprocessing import *
+#讀檔
+df_train=pd.read_csv('C:/Users/107368104/python-traning/train-v3.csv')
+df_valid=pd.read_csv('C:/Users/107368104/python-traning/valid-v3.csv')
+df_test=pd.read_csv('C:/Users/107368104/python-traning/test-v3.csv')
+#資料處裡
+data_title=['bedrooms','bathrooms','sqft_living','sqft_lot','floors','condition','grade','sqft_above','sqft_basement','yr_built']
+
+df_train.drop(['id'],inplace=True,axis=1)
+df_valid.drop(['id'],inplace=True,axis=1)
+df_test.drop(['id'],inplace=True,axis=1)
+
+Y_train=df_train['price'].values
+X_train=df_train[data_title].values
+Y_valid=df_valid['price'].values
+X_valid=df_valid[data_title].values
+X_test=df_test[data_title].values
+#標準化
+X_train_normal=scale(X_train)
+X_valid_normal=scale(X_valid)
+X_test_normal=scale(X_test)
+#模型
+model = Sequential()
+model.add(Dense(40, input_dim=X_train.shape[1],  kernel_initializer='normal',activation='relu'))
+model.add(Dense(80,  kernel_initializer='normal',activation='relu'))
+model.add(Dense(100, kernel_initializer='normal',activation='relu'))
+model.add(Dense(80, kernel_initializer='normal',activation='relu'))
+model.add(Dense(40, kernel_initializer='normal',activation='relu'))
+model.add(Dense(1,  kernel_initializer='normal'))
+model.compile(loss='MAE', optimizer='adam')
+#標準化
+nb_epoch = 50
+batch_size = 10
+
+fn=str(nb_epoch)+'_'+str(batch_size)
+TB=TensorBoard(log_dir='logs/'+fn, histogram_freq=0)
+model.fit(X_train, Y_train, batch_size=batch_size, nb_epoch=nb_epoch,verbose=1,validation_data=(X_valid, Y_valid),callbacks=[TB])
+model.save('C:/Users/107368104/python-traning/'+fn+'.h5')
+
+Y_predict=model.predict(X_test_normal)
+np.savetxt('C:/Users/107368104/python-traning/test_b_3.csv',Y_predict,delimiter=',')
